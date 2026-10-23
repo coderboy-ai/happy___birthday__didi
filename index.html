@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Happy Birthday Didi! 🎉</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #12071c;
+      color: #fff;
+      overflow-x: hidden;
+      transition: background 1.2s ease, color 1s ease;
+    }
+    body.lights-on {
+      background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 50%, #f3e5f5 100%);
+      color: #333;
+    }
+    h1, h2 { text-align: center; }
+
+    /* STEP 1 & 2: STAGE */
+    #stage-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      text-align: center;
+    }
+    .stage-title {
+      font-family: 'Dancing Script', cursive;
+      font-size: 3rem;
+      margin-bottom: 10px;
+      color: #ff8da1;
+      text-shadow: 0 2px 10px rgba(255, 105, 180, 0.4);
+    }
+    .instruction-box {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      padding: 12px 24px;
+      border-radius: 30px;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border: 2px solid rgba(255, 182, 193, 0.5);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    body.lights-on .instruction-box {
+      background: #fff;
+      color: #d81b60;
+      border-color: #ff8da1;
+    }
+    .btn {
+      background: linear-gradient(45deg, #ff4081, #ff80ab);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 64, 129, 0.4);
+      transition: transform 0.2s;
+      margin: 8px;
+    }
+    .btn:active { transform: scale(0.95); }
+
+    .mic-meter-wrap {
+      width: 220px;
+      height: 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px auto 25px;
+      display: none;
+    }
+    .mic-meter-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00e676, #ffeb3b, #ff1744);
+      transition: width 0.08s;
+    }
+
+    /* CAKE */
+    .cake-area {
+      position: relative;
+      width: 300px;
+      height: 260px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      margin-top: 20px;
+      touch-action: none;
+    }
+    .cake-wrapper {
+      position: relative;
+      width: 240px;
+      height: 180px;
+      display: flex;
+      justify-content: center;
+    }
+    .cake-half {
+      position: relative;
+      width: 120px;
+      height: 160px;
+      transition: transform 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .cake-half.left {
+      border-radius: 15px 0 0 10px;
+      background: linear-gradient(to bottom, #ff80ab 0%, #ff80ab 25%, #fff 25%, #fff 32%, #f06292 32%, #e91e63 100%);
+      box-shadow: inset 5px 0 15px rgba(0,0,0,0.15);
+    }
+    .cake-half.right {
+      border-radius: 0 15px 10px 0;
+      background: linear-gradient(to bottom, #ff80ab 0%, #ff80ab 25%, #fff 25%, #fff 32%, #f06292 32%, #e91e63 100%);
+      box-shadow: inset -5px 0 15px rgba(0,0,0,0.15);
+    }
+    .cake-half::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 22px;
+      background: #fce4ec;
+      border-radius: 10px 10px 15px 15px;
+    }
+    .cake-wrapper.cut .cake-half.left { transform: translateX(-35px) rotate(-8deg); }
+    .cake-wrapper.cut .cake-half.right { transform: translateX(35px) rotate(8deg); }
+
+    .plate {
+      position: absolute;
+      bottom: -12px;
+      width: 280px;
+      height: 16px;
+      background: #e0e0e0;
+      border-radius: 50%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      z-index: -1;
+    }
+
+    /* CANDLES */
+    .candles-container {
+      position: absolute;
+      top: -48px;
+      width: 160px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 5;
+      transition: opacity 0.5s;
+    }
+    .candle {
+      width: 14px;
+      height: 50px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 5px, #4fc3f7 5px, #4fc3f7 10px);
+      border-radius: 4px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .flame {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 24px;
+      background: radial-gradient(ellipse at bottom, #fff176 0%, #ff9800 60%, #e65100 100%);
+      border-radius: 50% 50% 35% 35%;
+      box-shadow: 0 0 18px #ff9800, 0 0 35px #ffeb3b;
+      animation: flicker 0.15s infinite alternate;
+    }
+    .smoke {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      background: rgba(200, 200, 200, 0.7);
+      border-radius: 50%;
+      opacity: 0;
+    }
+    .candle.blown .flame { display: none; }
+    .candle.blown .smoke { animation: smokeRise 1.2s ease-out forwards; }
+
+    @keyframes flicker {
+      0% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+      100% { transform: translateX(-50%) scale(1.08) rotate(2deg); }
+    }
+    @keyframes smokeRise {
+      0% { opacity: 0.9; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -45px) scale(3.5); }
+    }
+
+    .cut-line {
+      position: absolute;
+      top: -20px;
+      bottom: 0;
+      left: 50%;
+      border-left: 3px dashed #fff;
+      transform: translateX(-50%);
+      z-index: 6;
+      display: none;
+      pointer-events: none;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    #knife {
+      position: absolute;
+      top: -30px;
+      right: -20px;
+      font-size: 3.5rem;
+      cursor: grab;
+      z-index: 20;
+      display: none;
+      filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4));
+      touch-action: none;
+      transform: rotate(-45deg);
+    }
+
+    /* MAIN SECTIONS */
+    #main-content {
+      display: none;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .section-card {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 24px;
+      padding: 35px 20px;
+      margin: 40px 0;
+      box-shadow: 0 10px 30px rgba(216, 27, 96, 0.12);
+      border: 2px solid #ffc1e3;
+      text-align: center;
+    }
+    .section-title {
+      font-family: 'Dancing Script', cursive;
+      font-size: 2.6rem;
+      color: #d81b60;
+      margin-bottom: 20px;
+    }
+
+    /* STEP 3: GALLERY */
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+      margin-top: 20px;
+    }
+    .flip-card {
+      background-color: transparent;
+      width: 240px;
+      height: 300px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.7s;
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      padding: 12px;
+      background: #fff;
+    }
+    .flip-card-front img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .flip-card-front p {
+      margin-top: 12px;
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.4rem;
+      color: #444;
+    }
+    .flip-card-back {
+      background: linear-gradient(135deg, #ff80ab, #ff4081);
+      color: white;
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    /* STEP 4: CERTIFICATE */
+    .certificate {
+      background: #fffdf9;
+      border: 10px double #d4af37;
+      border-radius: 16px;
+      padding: 30px 20px;
+      max-width: 650px;
+      margin: 0 auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .certificate h3 {
+      font-family: 'Dancing Script', cursive;
+      font-size: 2.8rem;
+      color: #b8860b;
+      margin-bottom: 10px;
+    }
+    .cert-badge { font-size: 3.5rem; margin: 10px 0; }
+    .cert-sign {
+      margin-top: 25px;
+      display: flex;
+      justify-content: space-around;
+      font-weight: 600;
+      color: #555;
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+    }
+
+    /* STEP 5 & 7: MATH GAMES */
+    .math-question {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #880e4f;
+      margin: 15px 0;
+    }
+    .options-grid {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .opt-btn {
+      width: 70px;
+      height: 70px;
+      font-size: 1.6rem;
+      font-weight: 700;
+      border-radius: 16px;
+      border: 3px solid #ff4081;
+      background: #fff;
+      color: #d81b60;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .opt-btn:hover { background: #ff4081; color: #fff; transform: translateY(-3px); }
+    .game-feedback {
+      font-size: 1.25rem;
+      font-weight: 700;
+      min-height: 35px;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    /* STEP 6: ENVELOPE */
+    .envelope-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .envelope {
+      width: 280px;
+      height: 180px;
+      background: #f06292;
+      position: relative;
+      border-radius: 0 0 12px 12px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transition: transform 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .envelope::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-left: 140px solid transparent;
+      border-right: 140px solid transparent;
+      border-top: 100px solid #ec407a;
+      transform-origin: top;
+      transition: transform 0.6s ease;
+      z-index: 3;
+    }
+    .envelope.open::before { transform: rotateX(180deg); }
+    .heart-seal { font-size: 2.5rem; z-index: 4; transition: opacity 0.4s; }
+    .envelope.open .heart-seal { opacity: 0; }
+    .letter-paper {
+      display: none;
+      background: #fffef2;
+      border: 2px solid #ffd54f;
+      border-radius: 14px;
+      padding: 30px 25px;
+      margin-top: 25px;
+      text-align: left;
+      line-height: 1.8;
+      color: #333;
+      font-size: 1.05rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      max-width: 750px;
+    }
+    .letter-paper p { margin-bottom: 15px; }
+    .letter-sign {
+      text-align: right;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #d81b60;
+      margin-top: 25px;
+      font-family: 'Dancing Script', cursive;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STEP 1 & 2 -->
+  <section id="stage-section">
+    <h1 class="stage-title" id="top-heading">Make a Birthday Wish, Didi! ✨</h1>
+    <div class="instruction-box" id="status-text">
+      Step 1: Mic on karo aur phook maarke candles bujhao! 🌬️🎂
+    </div>
+
+    <div id="controls-area">
+      <button class="btn" onclick="startMicBlow()">🎙️ Enable Mic & Blow</button>
+      <button class="btn" style="background: #7e57c2;" onclick="extinguishCandles()">✨ Tap to Blow</button>
+    </div>
+
+    <div class="mic-meter-wrap" id="meter-wrap">
+      <div class="mic-meter-bar" id="meter-bar"></div>
+    </div>
+
+    <div class="cake-area" id="cake-area">
+      <div id="knife">🔪</div>
+      <div class="cut-line" id="cut-line"></div>
+
+      <div class="cake-wrapper" id="cake-wrapper">
+        <div class="candles-container" id="candles-box">
+          <div class="candle"><div class="flame"></div><div class="smoke"></div></div>
+          <div class="candle"><div class="flame"></div><div class="smoke"></div></div>
+          <div class="candle"><div class="flame"></div><div class="smoke"></div></div>
+        </div>
+        <div class="cake-half left"></div>
+        <div class="cake-half right"></div>
+        <div class="plate"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content">
+
+    <!-- STEP 3: PHOTOS -->
+    <div class="section-card">
+      <h2 class="section-title">Step 3: Our Best Memories 📸</h2>
+      <p style="margin-bottom: 15px; color:#666;">(Photo par tap karke peeche ka secret message padho!)</p>
+      
+      <div class="gallery">
+        <!-- Photo 1 -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <img src="didi1.jpg" alt="Didi Photo 1">
+              <p>Drama Queen 👑</p>
+            </div>
+            <div class="flip-card-back">
+              <p>"Duniya ke saamne kitni bhi innocent ban lo, ghar mein sabse badi drama queen aap hi ho! 😂❤️"</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo 2 -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <img src="didi2.jpg" alt="Didi Photo 2">
+              <p>My Saviour 🛡️</p>
+            </div>
+            <div class="flip-card-back">
+              <p>"Mummy-Papa ki daant se bachane aur chupke se meri har galti chhupane ke liye Thank You Didi! 🥺💖"</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo 3 -->
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <img src="didi3.jpg" alt="Didi Photo 3">
+              <p>Partner in Crime 🤝</p>
+            </div>
+            <div class="flip-card-back">
+              <p>"Chahe hum kitna bhi lad lein, meri sabse pehli best friend aur secret keeper hamesha aap hi rahogi! 🎉"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: CERTIFICATE -->
+    <div class="section-card">
+      <h2 class="section-title">Step 4: Official Award 🏆</h2>
+      <div class="certificate">
+        <div class="cert-badge">👑🎖️</div>
+        <h3>World's Best Didi Certificate</h3>
+        <p style="font-size: 1.05rem; color: #444; line-height: 1.7; margin-top: 10px;">
+          Yeh official certificate diya jaata hai duniya ki sabse pyari, thodi si khadoos, 
+          par dil ki sabse acchi <b>Didi</b> ko! Mere saare nakhre jhelne, 
+          apne hisse ki cheezein mujhe dene aur hamesha mera saath dene ke liye aapko milta hai 
+          Lifetime <b>"Best Sister Ever"</b> ka khitaab!
+        </p>
+        <div class="cert-sign">
+          <span>Date: Birthday Special 🎉</span>
+          <span>Signed by: Ansh 😎</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: MATH GAME 1 -->
+    <div class="section-card">
+      <h2 class="section-title">Step 5: IQ Test For Didi 🧠</h2>
+      <p>Chalo dekhte hain aapki Maths kitni tez hai:</p>
+      <div class="math-question">2 + 2 = ?</div>
+      <div class="options-grid">
+        <button class="opt-btn" onclick="checkGame1(6)">6</button>
+        <button class="opt-btn" onclick="checkGame1(2)">2</button>
+        <button class="opt-btn" onclick="checkGame1(4)">4</button>
+        <button class="opt-btn" onclick="checkGame1(5)">5</button>
+      </div>
+      <div class="game-feedback" id="game1-msg"></div>
+    </div>
+
+    <!-- STEP 6: ENVELOPE LETTER -->
+    <div class="section-card">
+      <h2 class="section-title">Step 6: A Secret Letter For You 💌</h2>
+      <p style="margin-bottom: 15px;">Lifafe (Envelope) par tap karke apna birthday letter kholo!</p>
+      
+      <div class="envelope-wrapper">
+        <div class="envelope" id="envelope" onclick="openEnvelope()">
+          <div class="heart-seal">💖</div>
+        </div>
+
+        <div class="letter-paper" id="letter-paper">
+          <p><b>Happy Birthday Meri Pyari Didi! 🎂🎉</b></p>
+          <p>
+            Aaj aapka special din hai aur main chahta tha ki aapko koi aisi cheez bheju jo hamesha yaad rahe. Sach bataun toh hum dono din bhar kitni bhi behas kar lein, TV ke remote, charger ya khane ke peeche kitna bhi jhagad lein, par ghar mein agar aap ek din bhi na dikho toh poora ghar soona-soona lagta hai. Bachpan se lekar aaj tak aapne sirf ek badi behen ka nahi, balki ek best friend, ek guide aur kabhi-kabhi toh doosri mummy ka bhi role nibhaya hai.
+          </p>
+          <p>
+            Mujhe aaj bhi yaad hai jab bhi mujhse koi galti ho jaati thi aur mummy-papa se daant padne wali hoti thi, toh aap hamesha dhaal bankar mere aage khadi ho jaati thi. Kabhi apni pocket money se mujhe chupke se kuch dila dena, toh kabhi raat ko der tak baithkar meri fizool ki baatein aur tension sunna—yeh sab sirf aap hi kar sakti ho. Main shayad kabhi bolkar nahi dikhata, par main dil se aapki bahut izzat karta hoon aur aapse bahut zyada pyar karta hoon.
+          </p>
+          <p>
+            Aapne hamesha meri chhoti-chhoti khushiyon ka khayal rakha hai, bina badle mein kuch maange. Aaj aapke birthday par bhagwan se bas yahi dua hai ki aapke saare sapne poore hon, aap zindagi mein itni tarakki karo ki mujhe aapse badi-badi party aur mehenge gifts maangne ka mauka milta rahe! Hamesha aise hi hasti-muskurati raho, kyunki aapki smile se hi ghar mein raunak rehti hai.
+          </p>
+          <p>
+            Ab kyunki filhaal mera budget thoda tight chal raha hai aur jeb khaali hai, toh mehenge gift ki jagah maine apna dimaag aur mehnat lagakar aapke liye yeh special website banayi hai. Kaam chala lena aur badle mein mujhe acchi si party de dena! Once again, Wish You A Very Happy Birthday Didi!
+          </p>
+          <div class="letter-sign">
+            tumhara garib bhai ansh 😁
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7: MATH GAME 2 -->
+    <div class="section-card">
+      <h2 class="section-title">Step 7: One Last Challenge! 😜</h2>
+      <p>Ek aakhiri mauka! Ab sahi jawab dekar dikhao:</p>
+      <div class="math-question">2 + 2 = ?</div>
+      <div class="options-grid">
+        <button class="opt-btn" onclick="checkGame2(6)">6</button>
+        <button class="opt-btn" onclick="checkGame2(2)">2</button>
+        <button class="opt-btn" onclick="checkGame2(4)">4</button>
+        <button class="opt-btn" onclick="checkGame2(5)">5</button>
+      </div>
+      <div class="game-feedback" id="game2-msg"></div>
+    </div>
+
+  </div>
+
+  <script>
+    let candlesBlown = false;
+    let cakeIsCut = false;
+    let audioCtx = null;
+    let micStream = null;
+
+    async function startMicBlow() {
+      const statusText = document.getElementById('status-text');
+      const meterWrap = document.getElementById('meter-wrap');
+      const meterBar = document.getElementById('meter-bar');
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(micStream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        meterWrap.style.display = 'block';
+        statusText.innerText = "Ab zor se mic mein phook maaro! 🌬️🎂";
+        let blowFrames = 0
